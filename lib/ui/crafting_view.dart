@@ -459,16 +459,16 @@ class _CraftingViewState extends ConsumerState<CraftingView> with SingleTickerPr
       children: [
         const Text(
           '🎯 정밀 세공 작업',
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         const Text(
           '슬라이더가 가운데에 위치할 때 정지 버튼을 누르세요!\n'
           '완벽 영역에 멈추면 보석 가치가 2.0배로 뜁니다.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.4),
+          style: TextStyle(color: Colors.white60, fontSize: 11, height: 1.3),
         ),
-        const SizedBox(height: 48),
+        const SizedBox(height: 24),
 
         // Slider Mini-Game Bar
         LayoutBuilder(
@@ -486,10 +486,10 @@ class _CraftingViewState extends ConsumerState<CraftingView> with SingleTickerPr
                 // Base background bar (Normal Zone)
                 Container(
                   width: width,
-                  height: 30,
+                  height: 24,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade800,
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.white24),
                   ),
                 ),
@@ -499,7 +499,7 @@ class _CraftingViewState extends ConsumerState<CraftingView> with SingleTickerPr
                   left: rareLeft,
                   child: Container(
                     width: rareWidth,
-                    height: 30,
+                    height: 24,
                     decoration: BoxDecoration(
                       color: Colors.blueAccent.withOpacity(0.5),
                       border: const Border.symmetric(vertical: BorderSide(color: Colors.blueAccent)),
@@ -512,7 +512,7 @@ class _CraftingViewState extends ConsumerState<CraftingView> with SingleTickerPr
                   left: perfectLeft,
                   child: Container(
                     width: perfectWidth,
-                    height: 30,
+                    height: 24,
                     decoration: BoxDecoration(
                       color: Colors.purpleAccent,
                       boxShadow: [
@@ -524,14 +524,14 @@ class _CraftingViewState extends ConsumerState<CraftingView> with SingleTickerPr
 
                 // Moving Needle/Pointer
                 Positioned(
-                  left: width * _sliderValue - 6,
-                  top: -6,
+                  left: width * _sliderValue - 5,
+                  top: -4,
                   child: Container(
-                    width: 12,
-                    height: 42,
+                    width: 10,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(3),
                       boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 4)],
                     ),
                   ),
@@ -542,7 +542,7 @@ class _CraftingViewState extends ConsumerState<CraftingView> with SingleTickerPr
                   left: width * 0.5 - 1,
                   child: Container(
                     width: 2,
-                    height: 30,
+                    height: 24,
                     color: Colors.white,
                   ),
                 ),
@@ -551,22 +551,22 @@ class _CraftingViewState extends ConsumerState<CraftingView> with SingleTickerPr
           },
         ),
 
-        const SizedBox(height: 60),
+        const SizedBox(height: 24),
 
         // STOP/HIT Button
         SizedBox(
-          width: 150,
-          height: 64,
+          width: 140,
+          height: 48,
           child: ElevatedButton(
             onPressed: _stopSliderAndCraft,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.purpleAccent.shade700,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-              elevation: 5,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              elevation: 4,
               shadowColor: Colors.purpleAccent.withOpacity(0.3),
             ),
-            child: const Text('정지! (STOP)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            child: const Text('정지! (STOP)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
           ),
         ),
       ],

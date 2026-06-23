@@ -28,6 +28,10 @@ class _ShopViewState extends ConsumerState<ShopView> {
   // Floaters for coins
   final List<CoinFloater> _coinFloaters = [];
 
+  // Dimensions of right panel for customer movement constraints
+  double _rightPanelWidth = 500.0;
+  double _rightPanelHeight = 350.0;
+
   @override
   void initState() {
     super.initState();
@@ -74,7 +78,6 @@ class _ShopViewState extends ConsumerState<ShopView> {
   }
 
   void _spawnCustomer() {
-    final size = MediaQuery.of(context).size;
     final id = DateTime.now().millisecondsSinceEpoch.toString();
     
     // Choose a random shelf slot that has an item to target
@@ -91,8 +94,9 @@ class _ShopViewState extends ConsumerState<ShopView> {
     final name = types[_random.nextInt(types.length)];
 
     final double startX = -100.0;
-    final double targetX = size.width * 0.25 + _random.nextDouble() * (size.width * 0.45);
-    final double targetY = size.height * 0.45 + _random.nextDouble() * (size.height * 0.15);
+    // Position targets relative to right panel (shop area)
+    final double targetX = _rightPanelWidth * 0.15 + _random.nextDouble() * (_rightPanelWidth * 0.65);
+    final double targetY = _rightPanelHeight * 0.4 + _random.nextDouble() * (_rightPanelHeight * 0.35);
 
     final newCustomer = CustomerNpc(
       id: id,
@@ -167,8 +171,7 @@ class _ShopViewState extends ConsumerState<ShopView> {
       // Walk out after buying
       Future.delayed(const Duration(milliseconds: 1200), () {
         if (!mounted) return;
-        final size = MediaQuery.of(context).size;
-        _updateCustomer(id, x: size.width + 120, state: CustomerState.walkingOut);
+        _updateCustomer(id, x: _rightPanelWidth + 120, state: CustomerState.walkingOut);
 
         // Delete from list after walked away
         Future.delayed(const Duration(seconds: 2), () {
@@ -184,8 +187,7 @@ class _ShopViewState extends ConsumerState<ShopView> {
 
       Future.delayed(const Duration(milliseconds: 1200), () {
         if (!mounted) return;
-        final size = MediaQuery.of(context).size;
-        _updateCustomer(id, x: size.width + 120, state: CustomerState.walkingOut);
+        _updateCustomer(id, x: _rightPanelWidth + 120, state: CustomerState.walkingOut);
 
         // Delete from list
         Future.delayed(const Duration(seconds: 2), () {
@@ -324,373 +326,407 @@ class _ShopViewState extends ConsumerState<ShopView> {
     return Scaffold(
       body: UnderwaterBackground(
         child: SafeArea(
-          child: Stack(
+          child: Row(
             children: [
-              // 1. Title/Header Info Bar
-              Positioned(
-                top: 16,
-                left: 16,
-                right: 16,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // 1. Left Control Panel (Stats, Trend, Quick Actions)
+              Container(
+                width: 230,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F141C).withOpacity(0.95),
+                  border: const Border(
+                    right: BorderSide(color: Colors.white10, width: 1),
+                  ),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Gold Display
+                    // Shop title
+                    Text(
+                      '🦦 수달의 보석상',
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.cyanAccent,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const Divider(color: Colors.white12, height: 20),
+
+                    // Gold Display Card
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.amberAccent.withOpacity(0.5), width: 1.5),
-                        boxShadow: [
-                          BoxShadow(color: Colors.amberAccent.withOpacity(0.1), blurRadius: 10)
-                        ],
+                        color: Colors.black.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.amberAccent.withOpacity(0.2)),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           const Text('🪙 ', style: TextStyle(fontSize: 20)),
-                          Text(
-                            '${state.gold}',
-                            style: GoogleFonts.outfit(
-                              color: Colors.amberAccent,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Text(
+                              '${state.gold}',
+                              style: GoogleFonts.outfit(
+                                color: Colors.amberAccent,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(height: 12),
 
-                    // Today's Trend Banner
+                    // Today's Trend Card
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.pinkAccent.withOpacity(0.5)),
+                        color: Colors.black.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.pinkAccent.withOpacity(0.2)),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('📢 트렌드: ', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                          const Row(
+                            children: [
+                              Icon(Icons.campaign, color: Colors.pinkAccent, size: 18),
+                              SizedBox(width: 6),
+                              Text(
+                                '오늘의 트렌드',
+                                style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
                           Text(
                             '${trendItem.icon} ${trendItem.name}',
-                            style: const TextStyle(color: Colors.pinkAccent, fontWeight: FontWeight.bold, fontSize: 14),
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                           ),
-                          Text(
-                            ' (${state.trendMultiplier}배!) ',
-                            style: const TextStyle(color: Colors.yellowAccent, fontWeight: FontWeight.bold, fontSize: 12),
-                          ),
-                          const SizedBox(width: 8),
-                          // Countdown circle
-                          Stack(
-                            alignment: Alignment.center,
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  value: _trendCountdown / 60.0,
-                                  strokeWidth: 2,
-                                  color: Colors.pinkAccent,
-                                  backgroundColor: Colors.white24,
-                                ),
-                              ),
                               Text(
-                                '$_trendCountdown',
-                                style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                '${state.trendMultiplier}배 가치!',
+                                style: const TextStyle(color: Colors.yellowAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                              Row(
+                                children: [
+                                  const Icon(Icons.timer_outlined, color: Colors.pinkAccent, size: 12),
+                                  const SizedBox(width: 2),
+                                  Text('$_trendCountdown초', style: const TextStyle(color: Colors.white60, fontSize: 11)),
+                                ],
                               )
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
+                    const Spacer(),
 
-              // 2. Active Customer NPCs (walking, looking, buying)
-              ..._customers.map((c) {
-                String bubbleText = '';
-                Color bubbleColor = Colors.white;
-                bool showBubble = false;
-
-                switch (c.state) {
-                  case CustomerState.walkingIn:
-                    break;
-                  case CustomerState.arrived:
-                    final item = c.targetShelfIdx != null ? state.showcase[c.targetShelfIdx!] : null;
-                    bubbleText = item != null ? '음.. ${recipes.firstWhere((r) => r.resultId == item.recipeId).name}인가..' : '흠.. 뭘 살까?';
-                    showBubble = true;
-                    break;
-                  case CustomerState.buying:
-                    bubbleText = '❤️ 이거 살게요!';
-                    bubbleColor = Colors.greenAccent;
-                    showBubble = true;
-                    break;
-                  case CustomerState.sad:
-                    bubbleText = '🌧️ 살 게 없네..';
-                    bubbleColor = Colors.orangeAccent;
-                    showBubble = true;
-                    break;
-                  case CustomerState.walkingOut:
-                    break;
-                }
-
-                return AnimatedPositioned(
-                  duration: const Duration(seconds: 2),
-                  curve: Curves.easeInOut,
-                  left: c.x,
-                  top: c.y,
-                  child: Column(
-                    children: [
-                      if (showBubble)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: bubbleColor,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
-                          ),
-                          child: Text(
-                            bubbleText,
-                            style: const TextStyle(color: Colors.black87, fontSize: 11, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.teal.shade800.withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.cyanAccent.withOpacity(0.5)),
-                        ),
-                        child: Text(
-                          c.name,
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-
-              // 3. Floating Coins
-              ..._coinFloaters.map((f) {
-                return CoinFloaterWidget(
-                  floater: f,
-                  onFinished: () {
-                    setState(() {
-                      _coinFloaters.remove(f);
-                    });
-                  },
-                );
-              }),
-
-              // 4. Shop Counters & Showcase Slots (Center)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 80.0, bottom: 120.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '🐚 수달의 진열 매대 🐚',
-                        style: GoogleFonts.outfit(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.cyanAccent,
-                          letterSpacing: 2.0,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Grid representation of counters
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 20,
-                        runSpacing: 20,
-                        children: List.generate(state.showcase.length, (idx) {
-                          final item = state.showcase[idx];
-
-                          return GestureDetector(
-                            onTap: () {
-                              if (item == null) {
-                                _showShowcasePlacementSelector(idx);
-                              } else {
-                                // Take it back
-                                ref.read(gameStateProvider.notifier).takeFromShowcase(idx);
-                                _showToast('📥 진열대에서 다시 수거했습니다.');
-                              }
-                            },
-                            child: Container(
-                              width: 130,
-                              height: 150,
-                              decoration: BoxDecoration(
-                                color: Colors.blueGrey.shade900.withOpacity(0.8),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: item != null
-                                      ? (state.todayTrendId == item.recipeId ? Colors.pinkAccent : Colors.cyanAccent)
-                                      : Colors.white24,
-                                  width: item != null ? 2 : 1,
-                                ),
-                                boxShadow: [
-                                  if (item != null)
-                                    BoxShadow(
-                                      color: (state.todayTrendId == item.recipeId ? Colors.pinkAccent : Colors.cyanAccent).withOpacity(0.25),
-                                      blurRadius: 12,
-                                    )
-                                ],
-                              ),
-                              child: Stack(
-                                children: [
-                                  // Shelf background drawing
-                                  Positioned(
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    child: Container(
-                                      height: 35,
-                                      decoration: BoxDecoration(
-                                        color: Colors.brown.shade800.withOpacity(0.9),
-                                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        '진열대 ${idx + 1}',
-                                        style: const TextStyle(color: Colors.white60, fontSize: 11),
-                                      ),
-                                    ),
-                                  ),
-
-                                  // Showcase contents
-                                  if (item != null) ...[
-                                    Center(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            recipes.firstWhere((r) => r.resultId == item.recipeId).icon,
-                                            style: const TextStyle(fontSize: 40),
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            recipes.firstWhere((r) => r.resultId == item.recipeId).name,
-                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                                            decoration: BoxDecoration(
-                                              color: item.quality.color.withOpacity(0.2),
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
-                                            child: Text(
-                                              item.quality.label,
-                                              style: TextStyle(color: item.quality.color, fontSize: 10, fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 15), // space for shelf
-                                        ],
-                                      ),
-                                    ),
-                                    // Trend Tag
-                                    if (state.todayTrendId == item.recipeId)
-                                      Positioned(
-                                        top: 8,
-                                        right: 8,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Colors.pinkAccent,
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: const Text(
-                                            'HOT',
-                                            style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                      ),
-                                  ] else
-                                    const Center(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.add_circle_outline, color: Colors.white38, size: 28),
-                                          SizedBox(height: 6),
-                                          Text('진열하기', style: TextStyle(color: Colors.white38, fontSize: 12)),
-                                          SizedBox(height: 15),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // 5. Bottom Navigation / Quick Actions Panel
-              Positioned(
-                bottom: 24,
-                left: 24,
-                right: 24,
-                child: Row(
-                  children: [
-                    // Crafting Button
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: widget.onGoCrafting,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueGrey.shade800.withOpacity(0.9),
-                          foregroundColor: Colors.white,
-                          shadowColor: Colors.black45,
-                          elevation: 6,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(color: Colors.cyanAccent.withOpacity(0.4)),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('🔨 ', style: TextStyle(fontSize: 18)),
-                            Text('세공 제작소', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Diving Button
-                    Expanded(
+                    // Big Diving Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
                       child: ElevatedButton(
                         onPressed: widget.onGoDiving,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.cyan.shade700.withOpacity(0.9),
+                          backgroundColor: Colors.cyan.shade700,
                           foregroundColor: Colors.white,
                           shadowColor: Colors.cyanAccent.withOpacity(0.3),
-                          elevation: 6,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            side: const BorderSide(color: Colors.cyanAccent),
-                          ),
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('🌊 ', style: TextStyle(fontSize: 18)),
-                            Text('바다 잠수', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            Text('🌊 ', style: TextStyle(fontSize: 16)),
+                            Text('바다 잠수', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Quick switch to Crafting
+                    SizedBox(
+                      width: double.infinity,
+                      height: 38,
+                      child: OutlinedButton(
+                        onPressed: widget.onGoCrafting,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white70,
+                          side: const BorderSide(color: Colors.white24),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('🔨 ', style: TextStyle(fontSize: 14)),
+                            Text('공방으로 가기', style: TextStyle(fontSize: 12)),
                           ],
                         ),
                       ),
                     ),
                   ],
+                ),
+              ),
+
+              // 2. Right Shop Floor Area (Customers walk here, Showcase display)
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Update dimensions post-frame
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        if (_rightPanelWidth != constraints.maxWidth || _rightPanelHeight != constraints.maxHeight) {
+                          setState(() {
+                            _rightPanelWidth = constraints.maxWidth;
+                            _rightPanelHeight = constraints.maxHeight;
+                          });
+                        }
+                      }
+                    });
+
+                    return Stack(
+                      children: [
+                        // Shelf Title
+                        Positioned(
+                          top: 16,
+                          left: 20,
+                          child: Text(
+                            '🐚 수달의 진열 매대',
+                            style: GoogleFonts.outfit(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.cyanAccent.shade100,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ),
+
+                        // Active Customer NPCs
+                        ..._customers.map((c) {
+                          String bubbleText = '';
+                          Color bubbleColor = Colors.white;
+                          bool showBubble = false;
+
+                          switch (c.state) {
+                            case CustomerState.walkingIn:
+                              break;
+                            case CustomerState.arrived:
+                              final item = c.targetShelfIdx != null ? state.showcase[c.targetShelfIdx!] : null;
+                              bubbleText = item != null
+                                  ? '음.. ${recipes.firstWhere((r) => r.resultId == item.recipeId).name}인가..'
+                                  : '흠.. 뭘 살까?';
+                              showBubble = true;
+                              break;
+                            case CustomerState.buying:
+                              bubbleText = '❤️ 이거 살게요!';
+                              bubbleColor = Colors.greenAccent;
+                              showBubble = true;
+                              break;
+                            case CustomerState.sad:
+                              bubbleText = '🌧️ 살 게 없네..';
+                              bubbleColor = Colors.orangeAccent;
+                              showBubble = true;
+                              break;
+                            case CustomerState.walkingOut:
+                              break;
+                          }
+
+                          return AnimatedPositioned(
+                            duration: const Duration(seconds: 2),
+                            curve: Curves.easeInOut,
+                            left: c.x,
+                            top: c.y,
+                            child: Column(
+                              children: [
+                                if (showBubble)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: bubbleColor,
+                                      borderRadius: BorderRadius.circular(10),
+                                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                                    ),
+                                    child: Text(
+                                      bubbleText,
+                                      style: const TextStyle(color: Colors.black87, fontSize: 10, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.teal.shade800.withOpacity(0.9),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: Colors.cyanAccent.withOpacity(0.4)),
+                                  ),
+                                  child: Text(
+                                    c.name,
+                                    style: const TextStyle(fontSize: 18),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+
+                        // Floating Coins
+                        ..._coinFloaters.map((f) {
+                          return CoinFloaterWidget(
+                            floater: f,
+                            onFinished: () {
+                              setState(() {
+                                _coinFloaters.remove(f);
+                              });
+                            },
+                          );
+                        }),
+
+                        // Shop Showcase Counters (Centered horizontally, scrollable if many)
+                        Positioned(
+                          left: 20,
+                          right: 20,
+                          top: 56,
+                          bottom: 16,
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(state.showcase.length, (idx) {
+                                  final item = state.showcase[idx];
+
+                                  return GestureDetector(
+                                    onTap: () {
+                                      if (item == null) {
+                                        _showShowcasePlacementSelector(idx);
+                                      } else {
+                                        ref.read(gameStateProvider.notifier).takeFromShowcase(idx);
+                                        _showToast('📥 진열대에서 다시 수거했습니다.');
+                                      }
+                                    },
+                                    child: Container(
+                                      width: 120,
+                                      height: 135,
+                                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blueGrey.shade900.withOpacity(0.85),
+                                        borderRadius: BorderRadius.circular(18),
+                                        border: Border.all(
+                                          color: item != null
+                                              ? (state.todayTrendId == item.recipeId ? Colors.pinkAccent : Colors.cyanAccent)
+                                              : Colors.white24,
+                                          width: item != null ? 2 : 1,
+                                        ),
+                                        boxShadow: [
+                                          if (item != null)
+                                            BoxShadow(
+                                              color: (state.todayTrendId == item.recipeId ? Colors.pinkAccent : Colors.cyanAccent).withOpacity(0.2),
+                                              blurRadius: 10,
+                                            )
+                                        ],
+                                      ),
+                                      child: Stack(
+                                        children: [
+                                          // Shelf Bottom Plank
+                                          Positioned(
+                                            bottom: 0,
+                                            left: 0,
+                                            right: 0,
+                                            child: Container(
+                                              height: 30,
+                                              decoration: BoxDecoration(
+                                                color: Colors.brown.shade800.withOpacity(0.9),
+                                                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                                              ),
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                '진열대 ${idx + 1}',
+                                                style: const TextStyle(color: Colors.white60, fontSize: 10),
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Content Showcase
+                                          if (item != null) ...[
+                                            Center(
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    recipes.firstWhere((r) => r.resultId == item.recipeId).icon,
+                                                    style: const TextStyle(fontSize: 32),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    recipes.firstWhere((r) => r.resultId == item.recipeId).name,
+                                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                                    decoration: BoxDecoration(
+                                                      color: item.quality.color.withOpacity(0.2),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Text(
+                                                      item.quality.label,
+                                                      style: TextStyle(color: item.quality.color, fontSize: 9, fontWeight: FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 15), // Shelf height offset
+                                                ],
+                                              ),
+                                            ),
+                                            if (state.todayTrendId == item.recipeId)
+                                              Positioned(
+                                                top: 6,
+                                                right: 6,
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.pinkAccent,
+                                                    borderRadius: BorderRadius.circular(6),
+                                                  ),
+                                                  child: const Text(
+                                                    'HOT',
+                                                    style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ),
+                                          ] else
+                                            const Center(
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(Icons.add_circle_outline, color: Colors.white38, size: 24),
+                                                  SizedBox(height: 4),
+                                                  Text('진열하기', style: TextStyle(color: Colors.white38, fontSize: 11)),
+                                                  SizedBox(height: 15),
+                                                ],
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],

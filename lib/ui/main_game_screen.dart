@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'shop_view.dart';
 import 'crafting_view.dart';
 import 'talent_tree_view.dart';
@@ -47,49 +48,91 @@ class _MainGameScreenState extends State<MainGameScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: IndexedStack(
-        index: _currentTabIdx,
-        children: tabs,
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF0B0E14).withOpacity(0.9),
-          border: const Border(
-            top: BorderSide(color: Colors.white10, width: 1),
-          ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentTabIdx,
-          onTap: (index) {
-            setState(() {
-              _currentTabIdx = index;
-            });
-          },
-          backgroundColor: Colors.transparent,
-          selectedItemColor: Colors.cyanAccent,
-          unselectedItemColor: Colors.white38,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          unselectedLabelStyle: const TextStyle(fontSize: 11),
-          elevation: 0,
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.storefront_outlined),
-              activeIcon: Icon(Icons.storefront, color: Colors.cyanAccent),
-              label: '진열 상점',
+      body: SafeArea(
+        child: Row(
+          children: [
+            // Left Navigation Sidebar
+            Container(
+              width: 76,
+              decoration: const BoxDecoration(
+                color: Color(0xFF0B0E14),
+                border: Border(
+                  right: BorderSide(color: Colors.white10, width: 1),
+                ),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  Text(
+                    '🦦',
+                    style: GoogleFonts.outfit(fontSize: 26),
+                  ),
+                  const Spacer(),
+                  _buildNavItem(0, Icons.storefront, Icons.storefront_outlined, '진열 상점'),
+                  const SizedBox(height: 20),
+                  _buildNavItem(1, Icons.gavel, Icons.gavel_outlined, '세공 공방'),
+                  const SizedBox(height: 20),
+                  _buildNavItem(2, Icons.auto_awesome, Icons.auto_awesome_outlined, '특성 연구'),
+                  const Spacer(),
+                  const Text(
+                    'v1.0',
+                    style: TextStyle(color: Colors.white12, fontSize: 10),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.gavel_outlined),
-              activeIcon: Icon(Icons.gavel, color: Colors.cyanAccent),
-              label: '세공 공방',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.auto_awesome_outlined),
-              activeIcon: Icon(Icons.auto_awesome, color: Colors.cyanAccent),
-              label: '특성 연구',
+            // Main content
+            Expanded(
+              child: IndexedStack(
+                index: _currentTabIdx,
+                children: tabs,
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
+    final isSelected = _currentTabIdx == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentTabIdx = index;
+        });
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.cyanAccent.withOpacity(0.08) : Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isSelected ? Colors.cyanAccent.withOpacity(0.3) : Colors.transparent,
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              isSelected ? activeIcon : inactiveIcon,
+              color: isSelected ? Colors.cyanAccent : Colors.white38,
+              size: 22,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.cyanAccent : Colors.white38,
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
       ),
     );
   }

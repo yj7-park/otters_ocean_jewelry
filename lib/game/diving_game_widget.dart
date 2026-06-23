@@ -374,8 +374,8 @@ class _DivingGameWidgetState extends ConsumerState<DivingGameWidget>
           if (!_hasStarted) {
             return Center(
               child: Container(
-                width: min(size.width * 0.8, 450),
-                padding: const EdgeInsets.all(32),
+                width: min(size.width * 0.85, 480),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 decoration: BoxDecoration(
                   color: Colors.blueGrey.shade900.withOpacity(0.9),
                   borderRadius: BorderRadius.circular(24),
@@ -388,54 +388,56 @@ class _DivingGameWidgetState extends ConsumerState<DivingGameWidget>
                     )
                   ],
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      '🌊 심해 채집 잠수',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        '🌊 심해 채집 잠수',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      '마우스나 손가락 드래그로 귀여운 수달을 조종하여 바다 속 조개, 진주, 바다유리를 채집하세요!\n\n'
-                      '⚠️ 산소가 바닥나기 전에 수면(맨 위쪽)으로 돌아와야 합니다. 산소가 다 떨어지면 조종 불가 상태가 되어 획득한 아이템을 모두 잃어버립니다!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
-                    ),
-                    const SizedBox(height: 24),
-                    // Display stats
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildStatChip('❤️ 최대 산소', '${_maxOxygen.round()} O₂', Colors.cyan),
-                        _buildStatChip('⚡ 수영 속도', 'x${_speedMultiplier.toStringAsFixed(2)}', Colors.amber),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildStatChip('🐚 가방 용량', '$_bagCapacity칸', Colors.lightGreen),
-                        _buildStatChip('⭐ 더블 채집', _doubleGather ? '활성화' : '미달성', Colors.purpleAccent),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: _startGame,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.cyanAccent.shade700,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 5,
+                      const SizedBox(height: 8),
+                      const Text(
+                        '마우스나 손가락 드래그로 귀여운 수달을 조종하여 바다 속 조개, 진주, 바다유리를 채집하세요!\n'
+                        '⚠️ 산소가 바닥나기 전에 수면(맨 위쪽)으로 돌아와야 합니다. 산소가 다 떨어지면 조종 불가 상태가 되어 획득한 아이템을 모두 잃어버립니다!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
                       ),
-                      child: const Text('잠수 시작하기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      // Display stats
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildStatChip('❤️ 최대 산소', '${_maxOxygen.round()} O₂', Colors.cyan),
+                          _buildStatChip('⚡ 수영 속도', 'x${_speedMultiplier.toStringAsFixed(2)}', Colors.amber),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildStatChip('🐚 가방 용량', '$_bagCapacity칸', Colors.lightGreen),
+                          _buildStatChip('⭐ 더블 채집', _doubleGather ? '활성화' : '미달성', Colors.purpleAccent),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _startGame,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.cyanAccent.shade700,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          elevation: 4,
+                        ),
+                        child: const Text('잠수 시작하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -592,11 +594,11 @@ class _DivingGameWidgetState extends ConsumerState<DivingGameWidget>
                   if (_isGameOver)
                     Center(
                       child: Container(
-                        width: min(size.width * 0.8, 400),
-                        padding: const EdgeInsets.all(28),
+                        width: min(size.width * 0.85, 420),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         decoration: BoxDecoration(
                           color: Colors.blueGrey.shade900.withOpacity(0.95),
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: _isSuccess ? Colors.greenAccent : Colors.redAccent,
                             width: 2,
@@ -606,85 +608,87 @@ class _DivingGameWidgetState extends ConsumerState<DivingGameWidget>
                               color: _isSuccess
                                   ? Colors.greenAccent.withOpacity(0.2)
                                   : Colors.redAccent.withOpacity(0.2),
-                              blurRadius: 20,
+                              blurRadius: 15,
                             )
                           ],
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _isSuccess ? Icons.check_circle_outline : Icons.error_outline,
-                              color: _isSuccess ? Colors.greenAccent : Colors.redAccent,
-                              size: 64,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _isSuccess ? '🎉 무사히 복귀 성공!' : '💀 기절: 구조됨',
-                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              _isSuccess
-                                  ? '채집한 자원을 안전하게 가게 인벤토리에 보관했습니다.'
-                                  : '산소가 고갈되어 바다에서 기절했습니다. 해안 경비대가 구조해 주었지만, 이번 잠수에서 채집한 자원은 유실되었습니다...',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
-                            ),
-                            const SizedBox(height: 20),
-                            if (_isSuccess) ...[
-                              const Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text('획득 자원:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _isSuccess ? Icons.check_circle_outline : Icons.error_outline,
+                                color: _isSuccess ? Colors.greenAccent : Colors.redAccent,
+                                size: 44,
                               ),
                               const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(12)),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                  children: _collectedRaw.entries.map((e) {
-                                    final item = GameItem.fromId(e.key);
-                                    return Column(
-                                      children: [
-                                        Text(item.icon, style: const TextStyle(fontSize: 24)),
-                                        const SizedBox(height: 4),
-                                        Text('${item.name}\nx${e.value}',
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(color: Colors.white, fontSize: 11)),
-                                      ],
-                                    );
-                                  }).toList(),
-                                ),
+                              Text(
+                                _isSuccess ? '🎉 무사히 복귀 성공!' : '💀 기절: 구조됨',
+                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                               ),
-                            ],
-                            const SizedBox(height: 24),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                OutlinedButton(
-                                  onPressed: widget.onFinish,
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    side: const BorderSide(color: Colors.white54),
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                  ),
-                                  child: const Text('가게로 가기'),
+                              const SizedBox(height: 8),
+                              Text(
+                                _isSuccess
+                                    ? '채집한 자원을 안전하게 가게 인벤토리에 보관했습니다.'
+                                    : '산소가 고갈되어 바다에서 기절했습니다. 해안 경비대가 구조해 주었지만, 이번 잠수에서 채집한 자원은 유실되었습니다...',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                              ),
+                              const SizedBox(height: 12),
+                              if (_isSuccess) ...[
+                                const Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text('획득 자원:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
                                 ),
-                                ElevatedButton(
-                                  onPressed: _startGame,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: _isSuccess ? Colors.green : Colors.red,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.3),
+                                      borderRadius: BorderRadius.circular(10)),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    children: _collectedRaw.entries.map((e) {
+                                      final item = GameItem.fromId(e.key);
+                                      return Column(
+                                        children: [
+                                          Text(item.icon, style: const TextStyle(fontSize: 20)),
+                                          const SizedBox(height: 2),
+                                          Text('${item.name}\nx${e.value}',
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(color: Colors.white, fontSize: 10)),
+                                        ],
+                                      );
+                                    }).toList(),
                                   ),
-                                  child: const Text('한 번 더 잠수'),
                                 ),
                               ],
-                            ),
-                          ],
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  OutlinedButton(
+                                    onPressed: widget.onFinish,
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.white,
+                                      side: const BorderSide(color: Colors.white54),
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                    ),
+                                    child: const Text('가게로 가기', style: TextStyle(fontSize: 13)),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: _startGame,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: _isSuccess ? Colors.green : Colors.red,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                    ),
+                                    child: const Text('한 번 더 잠수', style: TextStyle(fontSize: 13)),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

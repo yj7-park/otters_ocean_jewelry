@@ -192,17 +192,17 @@ class _TalentTreeViewState extends ConsumerState<TalentTreeView> {
       children: [
         // Category Title
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
           decoration: BoxDecoration(
             color: color.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
             title,
-            style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14),
+            style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
 
         // Nodes vertical path
         Expanded(
@@ -210,10 +210,10 @@ class _TalentTreeViewState extends ConsumerState<TalentTreeView> {
             itemCount: maxRow + 1,
             itemBuilder: (context, rowIdx) {
               final rowNodes = rows[rowIdx] ?? [];
-              if (rowNodes.isEmpty) return const SizedBox(height: 80);
+              if (rowNodes.isEmpty) return const SizedBox(height: 50);
 
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: rowNodes.map((node) {
@@ -249,8 +249,8 @@ class _TalentTreeViewState extends ConsumerState<TalentTreeView> {
                         message: node.name,
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          width: 54,
-                          height: 54,
+                          width: 46,
+                          height: 46,
                           decoration: BoxDecoration(
                             color: nodeBgColor,
                             shape: BoxShape.circle,
@@ -260,14 +260,14 @@ class _TalentTreeViewState extends ConsumerState<TalentTreeView> {
                             ),
                             boxShadow: [
                               if (isSelected)
-                                BoxShadow(color: color.withOpacity(0.4), blurRadius: 10, spreadRadius: 1)
+                                BoxShadow(color: color.withOpacity(0.4), blurRadius: 8, spreadRadius: 1)
                             ],
                           ),
                           alignment: Alignment.center,
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
-                              Text(node.icon, style: const TextStyle(fontSize: 26)),
+                              Text(node.icon, style: const TextStyle(fontSize: 22)),
                               if (!isUnlocked && !isUnlockable)
                                 Positioned(
                                   bottom: -2,
@@ -278,7 +278,7 @@ class _TalentTreeViewState extends ConsumerState<TalentTreeView> {
                                       color: Colors.black54,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(Icons.lock, color: Colors.white60, size: 10),
+                                    child: const Icon(Icons.lock, color: Colors.white60, size: 9),
                                   ),
                                 ),
                             ],
@@ -307,130 +307,132 @@ class _TalentTreeViewState extends ConsumerState<TalentTreeView> {
       prereq = talentNodes.firstWhere((n) => n.id == node.prerequisiteId);
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Node Large Icon and Name
-        Center(
-          child: Column(
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.cyanAccent.withOpacity(0.3)),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Node Large Icon and Name
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.cyanAccent.withOpacity(0.3)),
+                  ),
+                  child: Text(node.icon, style: const TextStyle(fontSize: 32)),
                 ),
-                child: Text(node.icon, style: const TextStyle(fontSize: 38)),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                node.name,
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-            ],
+                const SizedBox(height: 10),
+                Text(
+                  node.name,
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
-        ),
-        const Divider(color: Colors.white24, height: 32),
+          const Divider(color: Colors.white24, height: 24),
 
-        // Description
-        const Text('연구 설명:', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 6),
-        Text(
-          node.description,
-          style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
-        ),
-        const SizedBox(height: 20),
-
-        // Status
-        const Text('연구 상태:', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: isUnlocked
-                ? Colors.green.withOpacity(0.15)
-                : (isUnlockable ? Colors.blue.withOpacity(0.15) : Colors.red.withOpacity(0.15)),
-            borderRadius: BorderRadius.circular(8),
+          // Description
+          const Text('연구 설명:', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(
+            node.description,
+            style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4),
           ),
-          child: Text(
-            isUnlocked ? '완료됨' : (isUnlockable ? '연구 가능' : '잠김'),
-            style: TextStyle(
+          const SizedBox(height: 16),
+
+          // Status
+          const Text('연구 상태:', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
               color: isUnlocked
-                  ? Colors.greenAccent
-                  : (isUnlockable ? Colors.blueAccent : Colors.redAccent),
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
+                  ? Colors.green.withOpacity(0.15)
+                  : (isUnlockable ? Colors.blue.withOpacity(0.15) : Colors.red.withOpacity(0.15)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              isUnlocked ? '완료됨' : (isUnlockable ? '연구 가능' : '잠김'),
+              style: TextStyle(
+                color: isUnlocked
+                    ? Colors.greenAccent
+                    : (isUnlockable ? Colors.blueAccent : Colors.redAccent),
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-        // Prerequisites if any
-        if (prereq != null) ...[
-          const Text('선행 조건:', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Text(prereq.icon, style: const TextStyle(fontSize: 14)),
-              const SizedBox(width: 6),
-              Text(
-                '${prereq.name} 해금 필요',
-                style: TextStyle(
-                  color: state.unlockedTalents.contains(prereq.id) ? Colors.greenAccent : Colors.redAccent,
-                  fontSize: 12,
+          // Prerequisites if any
+          if (prereq != null) ...[
+            const Text('선행 조건:', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(prereq.icon, style: const TextStyle(fontSize: 12)),
+                const SizedBox(width: 6),
+                Text(
+                  '${prereq.name} 해금 필요',
+                  style: TextStyle(
+                    color: state.unlockedTalents.contains(prereq.id) ? Colors.greenAccent : Colors.redAccent,
+                    fontSize: 11,
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          const Divider(color: Colors.white12, height: 20),
+
+          // Cost and Buy Button
+          if (!isUnlocked) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('필요 재화:', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                Text(
+                  '🪙 ${node.cost} 골드',
+                  style: TextStyle(
+                    color: hasGold ? Colors.amberAccent : Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: (isUnlockable && hasGold) ? () => _buyTalent(node) : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purpleAccent.shade700,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.white10,
+                  disabledForegroundColor: Colors.white24,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('특성 해금 연구 시작', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
+            ),
+          ] else
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text('✅ 연구 완료된 특성입니다.', style: TextStyle(color: Colors.white38, fontSize: 12)),
+              ),
+            ),
         ],
-
-        const Spacer(),
-
-        // Cost and Buy Button
-        if (!isUnlocked) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('필요 재화:', style: TextStyle(color: Colors.white70, fontSize: 13)),
-              Text(
-                '🪙 ${node.cost} 골드',
-                style: TextStyle(
-                  color: hasGold ? Colors.amberAccent : Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: (isUnlockable && hasGold) ? () => _buyTalent(node) : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purpleAccent.shade700,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.white10,
-                disabledForegroundColor: Colors.white24,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-              child: const Text('특성 해금 연구 시작', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ] else
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Text('✅ 연구 완료된 특성입니다.', style: TextStyle(color: Colors.white38, fontSize: 13)),
-            ),
-          ),
-      ],
+      ),
     );
   }
 }
