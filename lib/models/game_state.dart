@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'item_model.dart';
 import 'talent_model.dart';
 
@@ -11,6 +12,8 @@ class GameState {
   final List<InventoryJewelry?> showcase; // Fixed slots (2, 4, or 6 depending on shelf upgrade)
   final String? todayTrendId;
   final double trendMultiplier;
+  final String activeThemeId;
+  final Set<String> unlockedThemeIds;
 
   GameState({
     required this.gold,
@@ -20,6 +23,8 @@ class GameState {
     required this.showcase,
     this.todayTrendId,
     this.trendMultiplier = 1.0,
+    required this.activeThemeId,
+    required this.unlockedThemeIds,
   });
 
   GameState copyWith({
@@ -30,6 +35,8 @@ class GameState {
     List<InventoryJewelry?>? showcase,
     String? todayTrendId,
     double? trendMultiplier,
+    String? activeThemeId,
+    Set<String>? unlockedThemeIds,
   }) {
     return GameState(
       gold: gold ?? this.gold,
@@ -39,6 +46,8 @@ class GameState {
       showcase: showcase ?? List.from(this.showcase),
       todayTrendId: todayTrendId ?? this.todayTrendId,
       trendMultiplier: trendMultiplier ?? this.trendMultiplier,
+      activeThemeId: activeThemeId ?? this.activeThemeId,
+      unlockedThemeIds: unlockedThemeIds ?? Set.from(this.unlockedThemeIds),
     );
   }
 
@@ -55,6 +64,8 @@ class GameStateNotifier extends Notifier<GameState> {
 
   @override
   GameState build() {
+    _loadStateFromPrefs();
+
     return GameState(
       gold: 150,
       inventoryRaw: {
@@ -75,16 +86,20 @@ class GameStateNotifier extends Notifier<GameState> {
       showcase: List.filled(2, null), // Initial 2 slots
       todayTrendId: 'shell_ring',
       trendMultiplier: 1.5,
+      activeThemeId: 'default',
+      unlockedThemeIds: {'default'},
     );
   }
 
   void addGold(int amount) {
     state = state.copyWith(gold: state.gold + amount);
+    _saveStateToPrefs();
   }
 
   bool removeGold(int amount) {
     if (state.gold < amount) return false;
     state = state.copyWith(gold: state.gold - amount);
+    _saveStateToPrefs();
     return true;
   }
 
@@ -105,6 +120,7 @@ class GameStateNotifier extends Notifier<GameState> {
 
     updated[id] = (updated[id] ?? 0) + finalCount;
     state = state.copyWith(inventoryRaw: updated);
+    _saveStateToPrefs();
   }
 
   void removeRawMaterial(String id, int count) {
@@ -112,6 +128,7 @@ class GameStateNotifier extends Notifier<GameState> {
     final current = updated[id] ?? 0;
     updated[id] = max(0, current - count);
     state = state.copyWith(inventoryRaw: updated);
+    _saveStateToPrefs();
   }
 
   void craftJewelry(String recipeId, ItemQuality quality) {
@@ -162,6 +179,7 @@ class GameStateNotifier extends Notifier<GameState> {
       inventoryRaw: updatedRaw,
       inventoryJewelry: updatedJewelry,
     );
+    _saveStateToPrefs();
   }
 
   // Showcase Placement
@@ -188,6 +206,7 @@ class GameStateNotifier extends Notifier<GameState> {
       inventoryJewelry: updatedJewelry,
       showcase: updatedShowcase,
     );
+    _saveStateToPrefs();
   }
 
   void takeFromShowcase(int slotIdx) {
@@ -214,10 +233,11 @@ class GameStateNotifier extends Notifier<GameState> {
       inventoryJewelry: updatedJewelry,
       showcase: updatedShowcase,
     );
+    _saveStateToPrefs();
   }
 
   // Selling logic
-  int sellItem(int slotIdx) {
+  int sellItem(int slotIdx, {double vipMultiplier = 1.0}) {
     final updatedShowcase = List<InventoryJewelry?>.from(state.showcase);
     if (slotIdx >= updatedShowcase.length || updatedShowcase[slotIdx] == null) return 0;
 
@@ -225,11 +245,16 @@ class GameStateNotifier extends Notifier<GameState> {
     final recipe = recipes.firstWhere((r) => r.resultId == item.recipeId);
 
     // Calculate Price
-    double price = recipe.baseValue * item.quality.multiplier;
+    double price = recipe.baseValue * item.quality.multiplier * vipMultiplier;
 
     // Apply Trend
     if (state.todayTrendId == item.recipeId) {
       price *= state.trendMultiplier;
+    }
+
+    // Apply Theme Bonus (Coral theme gives +15% price for Coral items and Crown)
+    if (state.activeThemeId == 'coral' && (item.recipeId == 'coral_brooch' || item.recipeId == 'ocean_crown')) {
+      price *= 1.15;
     }
 
     // Apply Sales Pitch talent (increases price by 20%)
@@ -249,6 +274,7 @@ class GameStateNotifier extends Notifier<GameState> {
       gold: newGold,
       showcase: updatedShowcase,
     );
+    _saveStateToPrefs();
 
     // Auto stocker talent check
     if (state.unlockedTalents.contains('auto_stocker')) {
@@ -282,6 +308,7 @@ class GameStateNotifier extends Notifier<GameState> {
         inventoryJewelry: updatedJewelry,
         showcase: updatedShowcase,
       );
+      _saveStateToPrefs();
     }
   }
 
@@ -320,6 +347,7 @@ class GameStateNotifier extends Notifier<GameState> {
       unlockedTalents: updatedTalents,
       showcase: updatedShowcase,
     );
+    _saveStateToPrefs();
 
     return true;
   }
@@ -343,6 +371,133 @@ class GameStateNotifier extends Notifier<GameState> {
       todayTrendId: newTrend,
       trendMultiplier: mult,
     );
+    _saveStateToPrefs();
+  }
+
+  // Theme Management Methods
+  bool unlockTheme(String themeId, int cost) {
+    if (state.gold < cost) return false;
+    final updatedThemes = Set<String>.from(state.unlockedThemeIds);
+    updatedThemes.add(themeId);
+    state = state.copyWith(
+      gold: state.gold - cost,
+      unlockedThemeIds: updatedThemes,
+    );
+    _saveStateToPrefs();
+    return true;
+  }
+
+  void equipTheme(String themeId) {
+    if (state.unlockedThemeIds.contains(themeId)) {
+      state = state.copyWith(activeThemeId: themeId);
+      _saveStateToPrefs();
+    }
+  }
+
+  // Persistence Implementation
+  Future<void> _loadStateFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedGold = prefs.getInt('gold');
+      if (savedGold == null) return;
+
+      final activeThemeId = prefs.getString('activeThemeId') ?? 'default';
+      final unlockedThemeList = prefs.getStringList('unlockedThemeIds') ?? ['default'];
+      final unlockedTalentList = prefs.getStringList('unlockedTalents') ?? [];
+      
+      final Map<String, int> inventoryRaw = {};
+      for (var mat in GameItem.rawMaterials) {
+        inventoryRaw[mat.id] = prefs.getInt('raw_${mat.id}') ?? 0;
+      }
+      
+      final jewelryJsonList = prefs.getStringList('inventoryJewelry') ?? [];
+      final List<InventoryJewelry> inventoryJewelry = [];
+      for (var jsonStr in jewelryJsonList) {
+        final parts = jsonStr.split(':');
+        if (parts.length == 4) {
+          inventoryJewelry.add(InventoryJewelry(
+            id: parts[0],
+            recipeId: parts[1],
+            quality: ItemQuality.values.firstWhere(
+              (q) => q.name == parts[2],
+              orElse: () => ItemQuality.normal,
+            ),
+            count: int.tryParse(parts[3]) ?? 1,
+          ));
+        }
+      }
+
+      final int showcaseSize = prefs.getInt('showcaseSize') ?? 2;
+      final List<InventoryJewelry?> showcase = List.filled(showcaseSize, null);
+      for (int i = 0; i < showcaseSize; i++) {
+        final slotData = prefs.getString('showcase_slot_$i');
+        if (slotData != null && slotData.isNotEmpty) {
+          final parts = slotData.split(':');
+          if (parts.length == 4) {
+            showcase[i] = InventoryJewelry(
+              id: parts[0],
+              recipeId: parts[1],
+              quality: ItemQuality.values.firstWhere(
+                (q) => q.name == parts[2],
+                orElse: () => ItemQuality.normal,
+              ),
+              count: int.tryParse(parts[3]) ?? 1,
+            );
+          }
+        }
+      }
+
+      state = GameState(
+        gold: savedGold,
+        inventoryRaw: inventoryRaw,
+        inventoryJewelry: inventoryJewelry,
+        unlockedTalents: unlockedTalentList.toSet(),
+        showcase: showcase,
+        todayTrendId: prefs.getString('todayTrendId') ?? state.todayTrendId,
+        trendMultiplier: prefs.getDouble('trendMultiplier') ?? state.trendMultiplier,
+        activeThemeId: activeThemeId,
+        unlockedThemeIds: unlockedThemeList.toSet(),
+      );
+    } catch (e) {
+      // Fail silently
+    }
+  }
+
+  Future<void> _saveStateToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('gold', state.gold);
+      await prefs.setString('activeThemeId', state.activeThemeId);
+      await prefs.setStringList('unlockedThemeIds', state.unlockedThemeIds.toList());
+      await prefs.setStringList('unlockedTalents', state.unlockedTalents.toList());
+      
+      for (var entry in state.inventoryRaw.entries) {
+        await prefs.setInt('raw_${entry.key}', entry.value);
+      }
+
+      final List<String> jewelryJsonList = [];
+      for (var j in state.inventoryJewelry) {
+        jewelryJsonList.add('${j.id}:${j.recipeId}:${j.quality.name}:${j.count}');
+      }
+      await prefs.setStringList('inventoryJewelry', jewelryJsonList);
+
+      await prefs.setInt('showcaseSize', state.showcase.length);
+      for (int i = 0; i < state.showcase.length; i++) {
+        final item = state.showcase[i];
+        if (item != null) {
+          await prefs.setString('showcase_slot_$i', '${item.id}:${item.recipeId}:${item.quality.name}:${item.count}');
+        } else {
+          await prefs.remove('showcase_slot_$i');
+        }
+      }
+
+      if (state.todayTrendId != null) {
+        await prefs.setString('todayTrendId', state.todayTrendId!);
+      }
+      await prefs.setDouble('trendMultiplier', state.trendMultiplier);
+    } catch (e) {
+      // Fail silently
+    }
   }
 }
 

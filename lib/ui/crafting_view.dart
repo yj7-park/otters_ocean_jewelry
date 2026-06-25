@@ -127,16 +127,19 @@ class _CraftingViewState extends ConsumerState<CraftingView> with SingleTickerPr
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 80,
-                height: 80,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: quality.color, width: 2),
+              SparkleEffectWidget(
+                color: quality.color,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: quality.color, width: 2),
+                  ),
+                  child: Text(_selectedRecipe!.icon, style: const TextStyle(fontSize: 48)),
                 ),
-                child: Text(_selectedRecipe!.icon, style: const TextStyle(fontSize: 48)),
               ),
               const SizedBox(height: 16),
               Text(
@@ -572,4 +575,119 @@ class _CraftingViewState extends ConsumerState<CraftingView> with SingleTickerPr
       ],
     );
   }
+}
+
+class SparkleEffectWidget extends StatefulWidget {
+  final Widget child;
+  final Color color;
+  const SparkleEffectWidget({super.key, required this.child, required this.color});
+
+  @override
+  State<SparkleEffectWidget> createState() => _SparkleEffectWidgetState();
+}
+
+class _SparkleEffectWidgetState extends State<SparkleEffectWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  final List<SparkleParticle> _particles = [];
+  final Random _random = Random();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    // Spawn star particles radiating outward
+    for (int i = 0; i < 20; i++) {
+      final double angle = _random.nextDouble() * pi * 2;
+      final double speed = _random.nextDouble() * 3.0 + 1.0;
+      _particles.add(SparkleParticle(
+        vx: cos(angle) * speed,
+        vy: sin(angle) * speed,
+        size: _random.nextDouble() * 6 + 3,
+        rotationSpeed: _random.nextDouble() * 3 - 1.5,
+      ));
+    }
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: SparklePainter(
+            particles: _particles,
+            progress: _controller.value,
+            color: widget.color,
+          ),
+          child: widget.child,
+        );
+      },
+    );
+  }
+}
+
+class SparkleParticle {
+  final double vx;
+  final double vy;
+  final double size;
+  final double rotationSpeed;
+
+  SparkleParticle({
+    required this.vx,
+    required this.vy,
+    required this.size,
+    required this.rotationSpeed,
+  });
+}
+
+class SparklePainter extends CustomPainter {
+  final List<SparkleParticle> particles;
+  final double progress;
+  final Color color;
+
+  SparklePainter({required this.particles, required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double cx = size.width / 2;
+    final double cy = size.height / 2;
+    final Paint paint = Paint()
+      ..color = color.withOpacity(1.0 - progress)
+      ..style = PaintingStyle.fill;
+
+    for (var p in particles) {
+      final double px = cx + p.vx * progress * 50;
+      final double py = cy + p.vy * progress * 50;
+      
+      canvas.save();
+      canvas.translate(px, py);
+      canvas.rotate(progress * p.rotationSpeed * pi);
+      
+      final path = Path()
+        ..moveTo(0, -p.size)
+        ..quadraticBezierTo(0, 0, p.size, 0)
+        ..quadraticBezierTo(0, 0, 0, p.size)
+        ..quadraticBezierTo(0, 0, -p.size, 0)
+        ..quadraticBezierTo(0, 0, 0, -p.size)
+        ..close();
+      
+      canvas.drawPath(path, paint);
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant SparklePainter oldDelegate) => true;
 }

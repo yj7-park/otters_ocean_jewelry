@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 
 class UnderwaterBackground extends StatefulWidget {
   final Widget? child;
-  const UnderwaterBackground({super.key, this.child});
+  final String themeId;
+  const UnderwaterBackground({super.key, this.child, this.themeId = 'default'});
 
   @override
   State<UnderwaterBackground> createState() => _UnderwaterBackgroundState();
@@ -61,6 +62,7 @@ class _UnderwaterBackgroundState extends State<UnderwaterBackground>
           painter: UnderwaterPainter(
             bubbles: _bubbles,
             animationValue: _controller.value,
+            themeId: widget.themeId,
           ),
           child: widget.child,
         );
@@ -92,33 +94,99 @@ class Bubble {
 class UnderwaterPainter extends CustomPainter {
   final List<Bubble> bubbles;
   final double animationValue;
+  final String themeId;
 
   UnderwaterPainter({
     required this.bubbles,
     required this.animationValue,
+    required this.themeId,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Draw Deep Water Gradient
+    // 1. Draw Deep Water Gradient based on themeId
     final Rect rect = Offset.zero & size;
-    final Gradient gradient = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        const HSLColor.fromAHSL(1.0, 195, 0.85, 0.45).toColor(), // Light Teal Top
-        const HSLColor.fromAHSL(1.0, 215, 0.90, 0.18).toColor(), // Indigo Medium
-        const HSLColor.fromAHSL(1.0, 235, 0.95, 0.06).toColor(), // Deep Navy Bottom
-      ],
-      stops: const [0.0, 0.6, 1.0],
-    );
+    Gradient gradient;
+
+    if (themeId == 'coral') {
+      gradient = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFFFFA4A2), // Coral Rose Light
+          Color(0xFFEC407A), // Vibrant Pink
+          Color(0xFF3F1D70), // Dark Purple Bottom
+        ],
+        stops: [0.0, 0.5, 1.0],
+      );
+    } else if (themeId == 'jellyfish') {
+      gradient = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFFD1C4E9), // Pale Lavender
+          Color(0xFF7E57C2), // Deep Violet
+          Color(0xFF151B54), // Midnight Navy
+        ],
+        stops: [0.0, 0.5, 1.0],
+      );
+    } else {
+      gradient = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const HSLColor.fromAHSL(1.0, 195, 0.85, 0.45).toColor(), // Light Teal Top
+          const HSLColor.fromAHSL(1.0, 215, 0.90, 0.18).toColor(), // Indigo Medium
+          const HSLColor.fromAHSL(1.0, 235, 0.95, 0.06).toColor(), // Deep Navy Bottom
+        ],
+        stops: const [0.0, 0.6, 1.0],
+      );
+    }
 
     final Paint paint = Paint()..shader = gradient.createShader(rect);
     canvas.drawRect(rect, paint);
 
-    // 2. Draw Sunlight Rays from top-left
+    // Draw Theme Decorations
+    if (themeId == 'coral') {
+      final coralPaint = Paint()..color = const Color(0xFFF50057).withOpacity(0.08)..style = PaintingStyle.fill;
+      for (double x = 40; x < size.width; x += 180) {
+        final path = Path()
+          ..moveTo(x, size.height)
+          ..quadraticBezierTo(x - 10, size.height - 30, x - 5, size.height - 45)
+          ..quadraticBezierTo(x, size.height - 50, x + 5, size.height - 45)
+          ..quadraticBezierTo(x + 10, size.height - 30, x, size.height)
+          ..moveTo(x - 5, size.height - 25)
+          ..quadraticBezierTo(x - 25, size.height - 35, x - 30, size.height - 50)
+          ..quadraticBezierTo(x - 20, size.height - 55, x - 10, size.height - 35)
+          ..close();
+        canvas.drawPath(path, coralPaint);
+      }
+    } else if (themeId == 'jellyfish') {
+      final time = DateTime.now().millisecondsSinceEpoch * 0.001;
+      final jPaint = Paint()..color = const Color(0xFFE040FB).withOpacity(0.05);
+      
+      // Jelly 1
+      double j1x = size.width * 0.25;
+      double j1y = size.height * 0.45 + sin(time) * 15;
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset(j1x, j1y), radius: 24),
+        pi, pi, true, jPaint
+      );
+      
+      // Jelly 2
+      double j2x = size.width * 0.75;
+      double j2y = size.height * 0.3 + cos(time) * 10;
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset(j2x, j2y), radius: 18),
+        pi, pi, true, jPaint
+      );
+    }
+
+    // 2. Draw Sunlight Rays
     final Paint rayPaint = Paint()
-      ..color = Colors.white.withOpacity(0.05)
+      ..color = themeId == 'coral' 
+          ? Colors.orangeAccent.withOpacity(0.03) 
+          : (themeId == 'jellyfish' ? Colors.purpleAccent.withOpacity(0.03) : Colors.white.withOpacity(0.05))
       ..style = PaintingStyle.fill;
 
     final double baseAngle = sin(animationValue * pi * 2) * 0.05;
@@ -141,12 +209,16 @@ class UnderwaterPainter extends CustomPainter {
 
     // 3. Draw Rising Bubbles
     final Paint bubblePaint = Paint()
-      ..color = Colors.white.withOpacity(0.25)
+      ..color = themeId == 'coral'
+          ? const Color(0xFFFF8A80).withOpacity(0.25)
+          : (themeId == 'jellyfish' ? const Color(0xFFEA80FC).withOpacity(0.25) : Colors.white.withOpacity(0.25))
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
     final Paint bubbleGlow = Paint()
-      ..color = Colors.white.withOpacity(0.08)
+      ..color = themeId == 'coral'
+          ? const Color(0xFFFF8A80).withOpacity(0.08)
+          : (themeId == 'jellyfish' ? const Color(0xFFEA80FC).withOpacity(0.08) : Colors.white.withOpacity(0.08))
       ..style = PaintingStyle.fill;
 
     for (var bubble in bubbles) {

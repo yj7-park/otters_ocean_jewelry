@@ -43,6 +43,8 @@ class _DivingGameWidgetState extends ConsumerState<DivingGameWidget>
   final List<SeaUrchin> _urchins = [];
   final List<OxygenBubbleEntity> _oxBubbles = [];
   final List<GameParticle> _particles = [];
+  final List<TreasureChest> _chests = [];
+  final List<OxygenVent> _vents = [];
 
   // Collected during this dive
   final Map<String, int> _collectedRaw = {
@@ -91,6 +93,8 @@ class _DivingGameWidgetState extends ConsumerState<DivingGameWidget>
       _urchins.clear();
       _oxBubbles.clear();
       _particles.clear();
+      _chests.clear();
+      _vents.clear();
       _otterX = 200;
       _otterY = 80;
       _otterTargetX = 200;
@@ -101,6 +105,20 @@ class _DivingGameWidgetState extends ConsumerState<DivingGameWidget>
 
   void _spawnEntities(Size size) {
     if (size.width == 0 || size.height == 0) return;
+
+    // Spawn Vents and Chests once per game
+    if (_vents.isEmpty && _hasStarted) {
+      final double vx = _random.nextDouble() * (size.width - 120) + 60;
+      _vents.add(OxygenVent(x: vx, y: size.height - 25));
+
+      if (_random.nextDouble() < 0.40) {
+        double cx = _random.nextDouble() * (size.width - 120) + 60;
+        if ((cx - vx).abs() < 80) {
+          cx = (vx + 150) % (size.width - 100) + 50;
+        }
+        _chests.add(TreasureChest(x: cx, y: size.height - 25));
+      }
+    }
 
     // Spawn Items
     if (_items.length < 8) {
@@ -336,6 +354,101 @@ class _DivingGameWidgetState extends ConsumerState<DivingGameWidget>
         if (p.life <= 0) toRemoveParticles.add(p);
       }
       _particles.removeWhere((p) => toRemoveParticles.contains(p));
+
+      // 8. Update Oxygen Vents
+      for (var v in _vents) {
+        if (v.bubbleCooldown > 0) {
+          v.bubbleCooldown--;
+        } else {
+          _oxBubbles.add(OxygenBubbleEntity(
+            x: v.x,
+            y: v.y - 15,
+            speed: _random.nextDouble() * 1.0 + 1.2,
+            swayAmount: _random.nextDouble() * 4 + 2,
+            phase: _random.nextDouble() * pi * 2,
+          ));
+          v.bubbleCooldown = 90 + _random.nextInt(60);
+        }
+
+        // Direct proximity oxygen charge
+        final double dist = sqrt(pow(v.x - _otterX, 2) + pow(v.y - _otterY, 2));
+        if (dist < 45) {
+          _oxygen = min(_maxOxygen, _oxygen + 0.35);
+          if (_random.nextDouble() < 0.05) {
+            _particles.add(GameParticle(
+              x: _otterX + _random.nextDouble() * 20 - 10,
+              y: _otterY - 15,
+              text: '🫧 O₂',
+              color: Colors.cyanAccent,
+              vy: -1.0,
+              life: 25,
+            ));
+          }
+        }
+      }
+
+      // 9. Update Treasure Chests
+      for (var c in _chests) {
+        if (!c.isOpened) {
+          final double dist = sqrt(pow(c.x - _otterX, 2) + pow(c.y - _otterY, 2));
+          if (dist < 32) {
+            c.isOpened = true;
+            final isGold = _random.nextBool();
+            if (isGold) {
+              final goldGained = 40 + _random.nextInt(41);
+              ref.read(gameStateProvider.notifier).addGold(goldGained);
+              _particles.add(GameParticle(
+                x: c.x,
+                y: c.y - 20,
+                text: '🎁 🪙 +$goldGained Gold!',
+                color: Colors.amberAccent,
+                vy: -2.0,
+                life: 60,
+              ));
+            } else {
+              final mats = ['pearl', 'coral', 'seaglass'];
+              final selectedMat = mats[_random.nextInt(mats.length)];
+              final item = GameItem.fromId(selectedMat);
+
+              if (_totalCollectedCount < _bagCapacity) {
+                _collectedRaw[selectedMat] = (_collectedRaw[selectedMat] ?? 0) + 1;
+                _particles.add(GameParticle(
+                  x: c.x,
+                  y: c.y - 20,
+                  text: '🎁 +${item.icon} ${item.name}!',
+                  color: item.color,
+                  vy: -2.0,
+                  life: 60,
+                ));
+              } else {
+                ref.read(gameStateProvider.notifier).addGold(50);
+                _particles.add(GameParticle(
+                  x: c.x,
+                  y: c.y - 20,
+                  text: '🎁 🎒 가득참! 🪙 +50 Gold!',
+                  color: Colors.amberAccent,
+                  vy: -2.0,
+                  life: 60,
+                ));
+              }
+            }
+
+            for (int i = 0; i < 12; i++) {
+              final double angle = _random.nextDouble() * pi * 2;
+              final double speed = _random.nextDouble() * 4 + 2;
+              _particles.add(GameParticle(
+                x: c.x,
+                y: c.y - 10,
+                vx: cos(angle) * speed,
+                vy: sin(angle) * speed - 1.0,
+                color: Colors.yellowAccent,
+                radius: _random.nextDouble() * 3 + 2,
+                life: 40 + _random.nextInt(20),
+              ));
+            }
+          }
+        }
+      }
     });
   }
 
@@ -478,6 +591,8 @@ class _DivingGameWidgetState extends ConsumerState<DivingGameWidget>
                       urchins: _urchins,
                       oxBubbles: _oxBubbles,
                       particles: _particles,
+                      chests: _chests,
+                      vents: _vents,
                       surfaceY: 100,
                       floorY: size.height - 20,
                     ),
@@ -779,6 +894,22 @@ class GameParticle {
   });
 }
 
+class TreasureChest {
+  final double x;
+  final double y;
+  bool isOpened;
+
+  TreasureChest({required this.x, required this.y, this.isOpened = false});
+}
+
+class OxygenVent {
+  final double x;
+  final double y;
+  int bubbleCooldown;
+
+  OxygenVent({required this.x, required this.y, this.bubbleCooldown = 0});
+}
+
 // 2D Game Painter
 class DivingGamePainter extends CustomPainter {
   final double otterX;
@@ -790,6 +921,8 @@ class DivingGamePainter extends CustomPainter {
   final List<SeaUrchin> urchins;
   final List<OxygenBubbleEntity> oxBubbles;
   final List<GameParticle> particles;
+  final List<TreasureChest> chests;
+  final List<OxygenVent> vents;
   final double surfaceY;
   final double floorY;
 
@@ -803,6 +936,8 @@ class DivingGamePainter extends CustomPainter {
     required this.urchins,
     required this.oxBubbles,
     required this.particles,
+    required this.chests,
+    required this.vents,
     required this.surfaceY,
     required this.floorY,
   });
@@ -824,9 +959,52 @@ class DivingGamePainter extends CustomPainter {
     );
     canvas.drawRect(rect, Paint()..shader = waterGrad.createShader(rect));
 
-    // 2. Draw Sea Floor Sand & Plants
+    // 2. Draw Sea Floor Sand, Vents, Chests & Plants
     final sandPaint = Paint()..color = const Color(0xFFD7CCC8);
     canvas.drawRect(Rect.fromLTRB(0, floorY, size.width, size.height), sandPaint);
+
+    // Draw Oxygen Vents (glowing volcano shape)
+    final ventPaint = Paint()..color = const Color(0xFF37474F);
+    final ventGlow = Paint()
+      ..color = Colors.cyanAccent.withOpacity(0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    for (var v in vents) {
+      canvas.drawCircle(Offset(v.x, v.y - 12), 14, ventGlow);
+      final path = Path()
+        ..moveTo(v.x - 22, v.y)
+        ..lineTo(v.x - 10, v.y - 12)
+        ..lineTo(v.x + 10, v.y - 12)
+        ..lineTo(v.x + 22, v.y)
+        ..close();
+      canvas.drawPath(path, ventPaint);
+
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(v.x, v.y - 12), width: 14, height: 4),
+        Paint()..color = Colors.cyanAccent,
+      );
+    }
+
+    // Draw Treasure Chests
+    for (var c in chests) {
+      if (c.isOpened) {
+        final textPainter = TextPainter(
+          text: const TextSpan(text: '🔓', style: TextStyle(fontSize: 24)),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        textPainter.paint(canvas, Offset(c.x - 12, c.y - 24));
+      } else {
+        canvas.drawCircle(
+          Offset(c.x, c.y - 10),
+          18,
+          Paint()..color = Colors.amberAccent.withOpacity(0.25)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+        );
+        final textPainter = TextPainter(
+          text: const TextSpan(text: '🎁', style: TextStyle(fontSize: 24)),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        textPainter.paint(canvas, Offset(c.x - 12, c.y - 24));
+      }
+    }
 
     final grassPaint = Paint()
       ..color = Colors.teal.shade700
